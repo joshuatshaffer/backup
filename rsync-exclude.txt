@@ -1,0 +1,9 @@
+/tmp
+/dev
+/proc
+/sys
+/run
+/media
+/mnt
+/var/cache
+/var/tmp
