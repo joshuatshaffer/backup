@@ -1,26 +1,32 @@
 #!/bin/bash
-set -e
 
 # Make simple incremental backups with rsync.
+
+set -e
 
 if [[ $EUID -ne 0 ]]; then
   echo "This script will not work unless it is run as root."
   exit 1
 fi
 
+LOG_FILE="/var/log/backup.log"
 EXCLUDE_FILE="/usr/local/etc/backup/rsync-exclude.txt"
 BACKUP_DIR="/media/joshua/Backup/backups/sasquatch"
+SRC_PATH="/"
 
 TIMESTAMP="$(date '+%Y-%m-%d_%H-%M-%S')"
 BACKUP_PATH="$BACKUP_DIR/$TIMESTAMP"
 LATEST_LINK="$BACKUP_DIR/latest"
 
-rsync --archive --no-devices --no-specials \
-  --one-file-system --protect-args \
-  --verbose --progress \
-  --exclude-from="$EXCLUDE_FILE" \
-  --link-dest="$LATEST_LINK" \
-  / "$BACKUP_PATH"
+echo "Running backup at $TIMESTAMP..." | tee -a "$LOG_FILE"
+
+rsync --archive --no-devices --no-specials --acls --xattrs \
+  --protect-args --verbose --progress \
+  --exclude-from="$EXCLUDE_FILE" --link-dest="$LATEST_LINK" \
+  --log-file="$LOG_FILE" \
+  "$SRC_PATH" "$BACKUP_PATH"
 
 # Replace the LATEST_LINK with a link to the backup we just made.
 ln -rsfn "$BACKUP_PATH" "$LATEST_LINK"
+
+echo "Finished backup that was started at $TIMESTAMP." | tee -a "$LOG_FILE"

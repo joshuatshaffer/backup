@@ -1,9 +1,11 @@
-/tmp
 /dev
-/proc
-/sys
-/run
+/lost+found
 /media
 /mnt
+/proc
+/run
+/sys
+/tmp
 /var/cache
+/var/log/backup.log
 /var/tmp
