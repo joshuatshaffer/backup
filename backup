@@ -11,7 +11,7 @@ fi
 
 LOG_FILE="/var/log/backup.log"
 EXCLUDE_FILE="/usr/local/etc/backup/rsync-exclude.txt"
-BACKUP_DIR="/media/joshua/Backup/backups/sasquatch"
+BACKUP_DIR="/media/$SUDO_USER/Backup/backups/sasquatch"
 SRC_PATH="/"
 
 TIMESTAMP="$(date '+%Y-%m-%d_%H-%M-%S')"
