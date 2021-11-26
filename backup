@@ -2,7 +2,7 @@
 
 # Make simple incremental backups with rsync.
 
-set -e
+set -eE
 
 if [[ $EUID -ne 0 ]]; then
   echo "This script will not work unless it is run as root."
@@ -17,6 +17,12 @@ SRC_PATH="/"
 TIMESTAMP="$(date '+%Y-%m-%d_%H-%M-%S')"
 BACKUP_PATH="$BACKUP_DIR/$TIMESTAMP"
 LATEST_LINK="$BACKUP_DIR/latest"
+
+function on_error() {
+  echo "Failed to make backup that was started at $TIMESTAMP." \
+    | tee -a "$LOG_FILE"
+}
+trap on_error ERR
 
 echo "Running backup at $TIMESTAMP..." | tee -a "$LOG_FILE"
 
