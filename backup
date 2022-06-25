@@ -9,6 +9,9 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
+# Some distros have this wrapper script that ignores the 
+# "some files vanished before they could be transferred" error.
+RSYNC_EXECUTABLE="/usr/share/rsync/scripts/rsync-no-vanished"
 LOG_FILE="/var/log/backup.log"
 EXCLUDE_FILE="/usr/local/etc/backup/rsync-exclude.txt"
 BACKUP_DIR="/media/$SUDO_USER/Backup/backups/sasquatch"
@@ -22,7 +25,7 @@ BACKUP_PATH_FAILED="$BACKUP_PATH-failed"
 
 echo "Running backup at $TIMESTAMP..." | tee -a "$LOG_FILE"
 
-rsync --archive --no-devices --no-specials --acls --xattrs \
+$RSYNC_EXECUTABLE --archive --no-devices --no-specials --acls --xattrs \
   --protect-args --verbose --progress \
   --exclude-from="$EXCLUDE_FILE" --link-dest="$LATEST_LINK" \
   --log-file="$LOG_FILE" \
