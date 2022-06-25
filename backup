@@ -15,14 +15,10 @@ BACKUP_DIR="/media/$SUDO_USER/Backup/backups/sasquatch"
 SRC_PATH="/"
 
 TIMESTAMP="$(date '+%Y-%m-%d_%H-%M-%S')"
-BACKUP_PATH="$BACKUP_DIR/$TIMESTAMP"
 LATEST_LINK="$BACKUP_DIR/latest"
-
-function on_error() {
-  echo "Failed to make backup that was started at $TIMESTAMP." \
-    | tee -a "$LOG_FILE"
-}
-trap on_error ERR
+BACKUP_PATH="$BACKUP_DIR/$TIMESTAMP"
+BACKUP_PATH_IN_PROGRESS="$BACKUP_PATH-in-progress"
+BACKUP_PATH_FAILED="$BACKUP_PATH-failed"
 
 echo "Running backup at $TIMESTAMP..." | tee -a "$LOG_FILE"
 
@@ -30,9 +26,15 @@ rsync --archive --no-devices --no-specials --acls --xattrs \
   --protect-args --verbose --progress \
   --exclude-from="$EXCLUDE_FILE" --link-dest="$LATEST_LINK" \
   --log-file="$LOG_FILE" \
-  "$SRC_PATH" "$BACKUP_PATH"
-
-# Replace the LATEST_LINK with a link to the backup we just made.
-ln -rsfn "$BACKUP_PATH" "$LATEST_LINK"
-
-echo "Finished backup that was started at $TIMESTAMP." | tee -a "$LOG_FILE"
+  "$SRC_PATH" "$BACKUP_PATH_IN_PROGRESS" \
+|| {
+  echo "Failed to make backup that was started at $TIMESTAMP." \
+    | tee -a "$LOG_FILE"
+  mv -n "$BACKUP_PATH_IN_PROGRESS" "$BACKUP_PATH_FAILED"
+  # Make sure this ends with an error exit code.
+  false
+} && {
+  mv -n "$BACKUP_PATH_IN_PROGRESS" "$BACKUP_PATH" \
+  && ln -rsfn "$BACKUP_PATH" "$LATEST_LINK" \
+  && echo "Finished backup that was started at $TIMESTAMP." | tee -a "$LOG_FILE"
+}
